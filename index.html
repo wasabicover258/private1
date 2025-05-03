@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privater Chat</title>
+  <style>
+    body { font-family: sans-serif; padding: 10px; }
+    #chat, #error { display: none; }
+    #messages { white-space: pre-wrap; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+  <div id="login">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Benutzername"><br>
+    <input type="password" id="password" placeholder="Passwort"><br>
+    <button onclick="login()">Einloggen</button>
+    <div id="error" style="color:red;"></div>
+  </div>
+
+  <div id="chat">
+    <h2>Privater Chat</h2>
+    <div id="messages">Nachrichten werden geladen...</div>
+    <input type="text" id="messageInput" placeholder="Nachricht eingeben">
+    <button onclick="sendMessage()">Senden</button>
+  </div>
+
+  <script>
+    const DB_URL = "https://chat-586a3-default-rtdb.europe-west1.firebasedatabase.app/private.json";
+
+    // Dummy-Zugangsdaten
+    const users = {
+      "user1": "pass1",
+      "user2": "pass2"
+    };
+
+    let currentUser = null;
+
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (users[username] === password) {
+        currentUser = username;
+        document.getElementById("login").style.display = "none";
+        document.getElementById("chat").style.display = "block";
+        loadMessages();
+        setInterval(loadMessages, 5000);
+      } else {
+        document.getElementById("error").textContent = "Falscher Benutzername oder Passwort.";
+        document.getElementById("error").style.display = "block";
+      }
+    }
+
+    function loadMessages() {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", DB_URL, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText) || {};
+          let text = '';
+          for (const key in data) {
+            const msg = data[key];
+            if (
+              (msg.from === "user1" && msg.to === "user2") ||
+              (msg.from === "user2" && msg.to === "user1")
+            ) {
+              text += msg.from + ": " + msg.text + "\n";
+            }
+          }
+          document.getElementById("messages").textContent = text || "Keine Nachrichten.";
+        }
+      };
+      xhr.send();
+    }
+
+    function sendMessage() {
+      const text = document.getElementById("messageInput").value.trim();
+      if (!text) return;
+      const message = {
+        from: currentUser,
+        to: currentUser === "user1" ? "user2" : "user1",
+        text: text
+      };
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", DB_URL, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          document.getElementById("messageInput").value = '';
+          loadMessages();
+        }
+      };
+      xhr.send(JSON.stringify(message));
+    }
+  </script>
+</body>
+</html>
