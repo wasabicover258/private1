@@ -1,100 +1,97 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privater Chat</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UsefulSite</title>
   <style>
-    body { font-family: sans-serif; padding: 10px; }
-    #chat, #error { display: none; }
-    #messages { white-space: pre-wrap; margin-bottom: 10px; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      background: linear-gradient(135deg, #a3d5f74d, #d5f6ef5d), url('Images/Hintergrund.png') no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2em;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #ffffff;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+      margin-bottom: 1em;
+    }
+
+    h2 {
+      font-size: 1.5em;
+      margin-top: 0;
+      color: #ffffff;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    #prices {
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 2em;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 500px;
+      color: #1a1a1a;
+    }
+
+    .price {
+      font-size: 1.3em;
+      margin: 0.5em 0;
+      padding: 0.4em;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.3);
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.05);
+    }
   </style>
 </head>
 <body>
-
-  <div id="login">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Benutzername"><br>
-    <input type="password" id="password" placeholder="Passwort"><br>
-    <button onclick="login()">Einloggen</button>
-    <div id="error" style="color:red;"></div>
-  </div>
-
-  <div id="chat">
-    <h2>Privater Chat</h2>
-    <div id="messages">Nachrichten werden geladen...</div>
-    <input type="text" id="messageInput" placeholder="Nachricht eingeben">
-    <button onclick="sendMessage()">Senden</button>
-  </div>
+  <h1>Welcome</h1>
+  <div id="prices">Loading fuel prices...</div>
 
   <script>
-    const DB_URL = "https://chat-586a3-default-rtdb.europe-west1.firebasedatabase.app/private.json";
+    const API_KEY = '975cf073-2abb-f889-3ec8-4a3658959a72';
+    const STATION_ID = '005056ba-7cb6-1ed2-bceb-76ac288c4d25';
 
-    // Dummy-Zugangsdaten
-    const users = {
-      "user1": "pass1",
-      "user2": "pass2"
-    };
+    const formatPrice = (value) => value !== null ? `${value} €` : 'Not available';
 
-    let currentUser = null;
+    async function loadPrices() {
+      try {
+        const res = await fetch(`https://creativecommons.tankerkoenig.de/json/detail.php?id=${STATION_ID}&apikey=${API_KEY}`);
+        const data = await res.json();
 
-    function login() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
+        if (data.ok) {
+          const { name, street, place, e5, e10, diesel, isOpen } = data.station;
 
-      if (users[username] === password) {
-        currentUser = username;
-        document.getElementById("login").style.display = "none";
-        document.getElementById("chat").style.display = "block";
-        loadMessages();
-        setInterval(loadMessages, 5000);
-      } else {
-        document.getElementById("error").textContent = "Falscher Benutzername oder Passwort.";
-        document.getElementById("error").style.display = "block";
+          document.getElementById("prices").innerHTML = `
+            <h2>${name}</h2>
+            <p>${street}, ${place}</p>
+            <p>Status: <strong style="color:${isOpen ? 'green' : 'red'}">${isOpen ? '🟢 Open' : '🔴 Closed'}</strong></p>
+            <div class="price">🟣 Super E5: <strong>${formatPrice(e5)}</strong></div>
+            <div class="price">🟢 Super E10: <strong>${formatPrice(e10)}</strong></div>
+            <div class="price">🟠 Diesel: <strong>${formatPrice(diesel)}</strong></div>
+          `;
+        } else {
+          document.getElementById("prices").innerHTML = `<p>Error: ${data.message}</p>`;
+        }
+      } catch (err) {
+        document.getElementById("prices").innerHTML = `<p>⚠️ Failed to connect to the API.</p>`;
+        console.error(err);
       }
     }
 
-    function loadMessages() {
-      const xhr = new XMLHttpRequest();
-      xhr.open("GET", DB_URL, true);
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          const data = JSON.parse(xhr.responseText) || {};
-          let text = '';
-          for (const key in data) {
-            const msg = data[key];
-            if (
-              (msg.from === "user1" && msg.to === "user2") ||
-              (msg.from === "user2" && msg.to === "user1")
-            ) {
-              text += msg.from + ": " + msg.text + "\n";
-            }
-          }
-          document.getElementById("messages").textContent = text || "Keine Nachrichten.";
-        }
-      };
-      xhr.send();
-    }
-
-    function sendMessage() {
-      const text = document.getElementById("messageInput").value.trim();
-      if (!text) return;
-      const message = {
-        from: currentUser,
-        to: currentUser === "user1" ? "user2" : "user1",
-        text: text
-      };
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", DB_URL, true);
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          document.getElementById("messageInput").value = '';
-          loadMessages();
-        }
-      };
-      xhr.send(JSON.stringify(message));
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+      loadPrices();
+      setInterval(loadPrices, 5 * 60 * 1000); // Refresh every 5 minutes
+    });
   </script>
 </body>
 </html>
