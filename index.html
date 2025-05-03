@@ -1,97 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>UsefulSite</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-      background: linear-gradient(135deg, #a3d5f74d, #d5f6ef5d), url('Images/Hintergrund.png') no-repeat center center fixed;
-      background-size: cover;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2em;
-    }
-
-    h1 {
-      font-size: 2.5em;
-      color: #ffffff;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
-      margin-bottom: 1em;
-    }
-
-    h2 {
-      font-size: 1.5em;
-      margin-top: 0;
-      color: #ffffff;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    }
-
-    #prices {
-      background: rgba(255, 255, 255, 0.25);
-      border-radius: 20px;
-      padding: 2em;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      width: 90%;
-      max-width: 500px;
-      color: #1a1a1a;
-    }
-
-    .price {
-      font-size: 1.3em;
-      margin: 0.5em 0;
-      padding: 0.4em;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.3);
-      box-shadow: inset 0 0 4px rgba(0,0,0,0.05);
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Bildanzeige</title>
 </head>
 <body>
-  <h1>Welcome</h1>
-  <div id="prices">Loading fuel prices...</div>
-
-  <script>
-    const API_KEY = '975cf073-2abb-f889-3ec8-4a3658959a72';
-    const STATION_ID = '005056ba-7cb6-1ed2-bceb-76ac288c4d25';
-
-    const formatPrice = (value) => value !== null ? `${value} €` : 'Not available';
-
-    async function loadPrices() {
-      try {
-        const res = await fetch(`https://creativecommons.tankerkoenig.de/json/detail.php?id=${STATION_ID}&apikey=${API_KEY}`);
-        const data = await res.json();
-
-        if (data.ok) {
-          const { name, street, place, e5, e10, diesel, isOpen } = data.station;
-
-          document.getElementById("prices").innerHTML = `
-            <h2>${name}</h2>
-            <p>${street}, ${place}</p>
-            <p>Status: <strong style="color:${isOpen ? 'green' : 'red'}">${isOpen ? '🟢 Open' : '🔴 Closed'}</strong></p>
-            <div class="price">🟣 Super E5: <strong>${formatPrice(e5)}</strong></div>
-            <div class="price">🟢 Super E10: <strong>${formatPrice(e10)}</strong></div>
-            <div class="price">🟠 Diesel: <strong>${formatPrice(diesel)}</strong></div>
-          `;
-        } else {
-          document.getElementById("prices").innerHTML = `<p>Error: ${data.message}</p>`;
-        }
-      } catch (err) {
-        document.getElementById("prices").innerHTML = `<p>⚠️ Failed to connect to the API.</p>`;
-        console.error(err);
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadPrices();
-      setInterval(loadPrices, 5 * 60 * 1000); // Refresh every 5 minutes
-    });
-  </script>
+  <img src="DEIN-BILDNAME.png" alt="Bild" style="max-width: 100%;">
 </body>
 </html>
